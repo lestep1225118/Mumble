@@ -10,7 +10,7 @@
 
 ## Features
 
-- **Spotify CSV import** — Export a playlist via [Exportify](https://exportify.net) or [Soundiiz](https://soundiiz.com), drop the CSV, and Mumble parses keys, BPM, and metadata.
+- **Spotify CSV import** — Export a playlist via [Exportify](https://exportify.net), drop the CSV, and Mumble parses keys, BPM, and metadata.
 - **Reference by song or by key** — Choose a track from your list as the reference, or enter key and BPM manually.
 - **Harmonic matching** — Filters by same key, relative key, and (optionally) parallel key.
 - **BPM range** — Adjustable ±BPM tolerance; supports half-time and double-time (e.g. 70 BPM matches 140).
