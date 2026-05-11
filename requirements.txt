@@ -1,0 +1,26 @@
+# Mumble - DJ Mixing Assistant
+# Python Dependencies
+
+# Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+werkzeug==3.0.1
+
+# Web Scraping (for Tunebat)
+beautifulsoup4==4.12.2
+lxml==5.1.0
+
+# Audio Analysis (optional but recommended)
+librosa==0.10.1
+numpy==1.26.2
+soundfile==0.12.1
+
+# AI Integration (optional)
+openai==1.6.1
+
+# HTTP Requests
+requests==2.31.0
+
+# YouTube/URL Processing (optional)
+yt-dlp==2023.12.30
+

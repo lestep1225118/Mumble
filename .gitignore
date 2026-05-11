@@ -1,22 +1,13 @@
-# Dependencies
-node_modules/
-
-# Build
-dist/
-build/
-
-# Logs and env
-*.log
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
 .env
-.env.local
-.env.*.local
-
-# Editor
-.vscode/
+.env.*
+*.log
 .idea/
+.vscode/
 *.swp
-*.swo
-
-# OS
 .DS_Store
-Thumbs.db

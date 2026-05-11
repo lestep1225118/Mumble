@@ -1,117 +1,219 @@
-# Mumble
+# 🎧 Mumble - DJ Mixing Assistant
 
-**Mumble** is a web app that finds harmonically compatible songs in your Spotify playlist. Pick a reference track (or enter key and BPM manually), and Mumble shows you all tracks that match by key and tempo—same key, relative key, or parallel key—so you can build smooth DJ sets or practice playlists.
+A web application that helps DJs find the perfect songs to mix together. Upload or search for a song, analyze its musical characteristics, and get recommendations for compatible tracks based on BPM, key, mood, and your custom prompts.
 
-![Node](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js)  
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)  
-![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
+![Mumble Screenshot](https://via.placeholder.com/800x400/0a0a0f/00d4ff?text=Mumble+DJ+Mixing+Assistant)
 
----
+## ✨ Features
 
-## Features
+- **Audio Analysis**: Analyze songs for BPM, musical key, energy, and mood
+- **Multiple Input Methods**: Upload audio files, paste URLs (YouTube/Spotify/SoundCloud), or search by song name
+- **Smart Key Compatibility**: Automatically calculates harmonically compatible keys for mixing:
+  - Same key
+  - Relative major/minor
+  - One semitone up/down
+  - Perfect fifth relationships
+- **AI-Powered Recommendations**: Describe what you're looking for in natural language
+- **Beautiful UI**: Dark, atmospheric design with vinyl/DJ aesthetics
 
-- **Spotify CSV import** — Export a playlist via [Exportify](https://exportify.net), drop the CSV, and Mumble parses keys, BPM, and metadata.
-- **Reference by song or by key** — Choose a track from your list as the reference, or enter key and BPM manually.
-- **Harmonic matching** — Filters by same key, relative key, and (optionally) parallel key.
-- **BPM range** — Adjustable ±BPM tolerance; supports half-time and double-time (e.g. 70 BPM matches 140).
-- **Sort & filter** — Sort by BPM difference, popularity, or energy; filter by match type.
-- **Pivot on any row** — Click a result to use it as the new reference track.
+## 🎵 Key Compatibility Logic
 
----
+The app follows DJ-friendly harmonic mixing rules. For example, if your source song is in **C major**, compatible keys include:
 
-## Requirements
+| Key | Relationship |
+|-----|--------------|
+| C major | Same key |
+| A minor | Relative minor |
+| G# minor | Relative minor -1 semitone |
+| A# minor | Relative minor +1 semitone |
+| B major | Source -1 semitone |
+| C# major | Source +1 semitone |
+| G major | Perfect fifth down |
+| F major | Perfect fourth |
 
-- [Node.js](https://nodejs.org/) **v18 or newer**
+## 🌐 Data Sources
 
----
+### 🎵 ListenBrainz / MusicBrainz (Primary - No Setup Required!)
+The app uses the **ListenBrainz API** combined with **MusicBrainz** and **AcousticBrainz** to get real song data:
+- BPM (tempo) from acoustic analysis
+- Musical key and mode
+- Energy levels
+- Song metadata (title, artist, album)
 
-## Quick start
+This works out of the box - no API keys needed!
 
-### 1. Clone and install
+**How it works:**
+1. Searches ListenBrainz for the song → Gets MusicBrainz Recording ID
+2. Fetches acoustic features from AcousticBrainz → BPM, key, energy
+3. Returns accurate data for millions of songs
 
-```bash
-git clone https://github.com/lestep1225118/Mumble.git
-cd Mumble
-npm install
-```
+### 🎧 Spotify API (Optional Backup)
+If you want to use Spotify as an additional source:
+1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+2. Create an app and get Client ID + Secret
+3. Set environment variables:
+   ```powershell
+   $env:SPOTIFY_CLIENT_ID = "your_client_id"
+   $env:SPOTIFY_CLIENT_SECRET = "your_client_secret"
+   ```
 
-### 2. Run the app
+### Built-in Database (Last Resort)
+If external APIs fail, the app falls back to a built-in database of ~40 popular songs.
 
-```bash
-npm run dev
-```
+## 🚀 Quick Start
 
-Then open **http://localhost:5274** in your browser (port is set in `vite.config.js`; Vite will prompt if it’s in use).
+### Prerequisites
 
-### 3. Use it
+- Python 3.9 or higher
+- pip (Python package manager)
 
-1. Export a Spotify playlist as CSV (e.g. with [Exportify](https://exportify.net)).
-2. Drag and drop the CSV onto Mumble (or click to browse).
-3. Search for a song to set as the reference track, or switch to **Match by Key & BPM** and enter key, mode, and BPM.
-4. Browse matches, adjust ±BPM and “parallel keys” as needed, and click any row to pivot to that track as the new reference.
+### Installation
 
----
+1. **Clone or download the project**
+   ```bash
+   cd Mumble
+   ```
 
-## Key matching logic
+2. **Create a virtual environment** (recommended)
+   ```bash
+   python -m venv venv
+   
+   # On Windows:
+   venv\Scripts\activate
+   
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
 
-| Type        | Description | Example                |
-|------------|-------------|------------------------|
-| **Same key**   | Same key and mode | G minor → G minor       |
-| **Relative key** | Same scale, different tonic | G minor ↔ B♭ major      |
-| **Parallel key** | Same root, opposite mode (optional) | G minor ↔ G major |
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Relative keys share the same set of notes (e.g. A minor and C major). Parallel keys share the same root (e.g. A minor and A major). You can toggle “parallel keys” on or off in the controls.
+   > **Note**: `librosa` installation may take a few minutes as it includes audio processing libraries.
 
----
+4. **Run the application**
+   ```bash
+   cd backend
+   python app.py
+   ```
 
-## Project structure
+5. **Open in browser**
+   Navigate to [http://localhost:5000](http://localhost:5000)
+
+## 📁 Project Structure
 
 ```
 Mumble/
-├── index.html          # Entry HTML
-├── package.json        # Dependencies and scripts
-├── vite.config.js      # Vite config (port, React plugin)
-├── src/
-│   ├── main.jsx        # React mount
-│   ├── App.jsx         # Main app: upload, reference, filters, table
-│   ├── index.css       # Global styles
-│   ├── UploadZone.jsx  # CSV drop zone
-│   ├── ResultsTable.jsx # Match table and row click
-│   ├── MiniBar.jsx     # Mini stats bar (if used)
-│   └── utils.js        # CSV parse, key/BPM matching
-└── README.md
+├── backend/
+│   ├── app.py              # Flask web server
+│   ├── audio_analyzer.py   # BPM, key, mood detection
+│   ├── key_compatibility.py # Harmonic mixing rules
+│   └── song_recommender.py  # AI-powered recommendations
+├── frontend/
+│   ├── index.html          # Main HTML page
+│   ├── styles.css          # Dark DJ-themed styles
+│   └── app.js              # Frontend logic
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
 ```
 
+## 🎛️ Usage
+
+### Step 1: Add Your Track
+Choose one of three input methods:
+- **Upload**: Drag and drop or click to upload MP3, WAV, FLAC, OGG, M4A, or AAC files
+- **Link**: Paste a YouTube, Spotify, or SoundCloud URL
+- **Search**: Enter the song name and artist
+
+### Step 2: Analyze
+Click "Analyze Track" to detect:
+- **BPM**: Beats per minute
+- **Key**: Musical key (e.g., C major, A minor)
+- **Energy**: Intensity level (0-100%)
+- **Mood**: Emotional character (romantic, energetic, sad, etc.)
+
+### Step 3: Find Matches
+Describe what you're looking for using natural language:
+- *"Find an English pop song with similar romantic vibe"*
+- *"Find an EDM track that would mix well for a club set"*
+- *"Find a Hindi Bollywood song with similar feel"*
+
+### Step 4: Review Results
+Browse recommended tracks sorted by compatibility score. Each result shows:
+- Key and BPM compatibility
+- Mood and energy match
+- Reasons for recommendation
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI API key for AI-enhanced recommendations | Optional |
+
+Set environment variables before running:
+```bash
+# Windows
+set OPENAI_API_KEY=your-key-here
+
+# macOS/Linux
+export OPENAI_API_KEY=your-key-here
+```
+
+### Optional Features
+
+**Without librosa**: The app will work but will use database lookups instead of actual audio analysis for uploaded files.
+
+**Without OpenAI**: Recommendations work without AI, using rule-based matching. AI enhances recommendations with natural language explanations.
+
+## 🎨 Customization
+
+### Adding More Songs to Database
+
+Edit `backend/song_recommender.py` and add entries to `SONG_DATABASE`:
+
+```python
+{
+    "title": "Song Title",
+    "artist": "Artist Name",
+    "bpm": 120,
+    "key": "A minor",
+    "mood": "energetic",
+    "genre": "Pop",
+    "language": "English",
+    "energy": 75
+}
+```
+
+### Modifying Key Compatibility
+
+Edit `backend/key_compatibility.py` to adjust which keys are considered compatible for mixing.
+
+## 🛠️ API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/analyze` | POST | Analyze a song (file upload, URL, or name) |
+| `/api/recommend` | POST | Get song recommendations |
+| `/api/compatible-keys/<key>` | GET | Get compatible keys for a given key |
+| `/api/health` | GET | Health check |
+
+## 🤝 Contributing
+
+Contributions are welcome! Ideas for improvement:
+- Integration with Spotify/YouTube APIs for real metadata
+- Actual audio analysis for URL sources
+- More sophisticated AI prompts
+- User accounts and saved playlists
+- Waveform visualization
+
+## 📄 License
+
+MIT License - feel free to use, modify, and distribute.
+
 ---
 
-## Scripts
+Built with 💜 for DJs who love seamless transitions 🎧
 
-| Command         | Description                    |
-|----------------|--------------------------------|
-| `npm run dev`  | Start dev server (default port 5274) |
-| `npm run build`| Production build to `dist/`    |
-| `npm run preview` | Serve production build locally |
-
----
-
-## Exporting from Spotify
-
-Spotify doesn’t offer CSV export in-app. Use a third-party exporter that includes **Track Name**, **Artist**, **Key**, **Mode**, **Tempo**, and optionally **Energy**, **Popularity**, etc. Mumble expects column names like:
-
-- `Track Name`, `Artist Name(s)`, `Album Name`
-- `Tempo`, `Key`, `Mode`
-- `Popularity`, `Energy`, `Danceability`, `Valence` (optional)
-
-[Exportify](https://exportify.net) and [Soundiiz](https://soundiiz.com) produce CSVs that work with Mumble.
-
----
-
-## License
-
-MIT.
-
----
-
-## Repository
-
-**Mumble** — [https://github.com/lestep1225118/Mumble](https://github.com/lestep1225118/Mumble)
