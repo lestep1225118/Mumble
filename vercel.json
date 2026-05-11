@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "echo 'Skip npm on Vercel — production UI is frontend/ via Flask.'",
+  "buildCommand": "echo 'Skip Vite — dist/ was shadowing / with the legacy React app.'",
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
   "functions": {
     "api/**/*.py": {
