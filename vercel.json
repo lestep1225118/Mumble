@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "outputDirectory": null,
+  "outputDirectory": "dist",
   "installCommand": "echo 'Skip npm on Vercel — production UI is frontend/ via Flask.'",
-  "buildCommand": "echo 'Skip Vite — dist/ was shadowing / with the legacy React app.'",
+  "buildCommand": "mkdir -p dist && echo '{}' > dist/.vercel-output-marker.json",
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
   "functions": {
     "api/**/*.py": {
