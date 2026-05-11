@@ -4,18 +4,22 @@ const REASON_STYLE = {
   "Same key":     { bg: "#3b1f6e", color: "#c4b5fd", dot: "#a78bfa" },
   "Relative key": { bg: "#064e3b", color: "#6ee7b7", dot: "#34d399" },
   "Parallel key": { bg: "#1e3a5f", color: "#93c5fd", dot: "#60a5fa" },
+  "Perfect fifth up": { bg: "#3b2a00", color: "#fde68a", dot: "#f59e0b" },
+  "Perfect fifth down": { bg: "#2a1b00", color: "#fbbf24", dot: "#f59e0b" },
+  "Pitch tolerance": { bg: "#0f3d2e", color: "#a7f3d0", dot: "#22c55e" },
+  "Relative pitch tolerance": { bg: "#153b5d", color: "#93c5fd", dot: "#60a5fa" },
 };
 
 export default function ResultsTable({ results, onSelectSong }) {
   if (results.length === 0) {
     return (
       <div style={{ textAlign: "center", color: "#334155", padding: "3rem", fontSize: "0.85rem" }}>
-        No matches found — try widening the BPM range or enabling parallel keys.
+        No matches found — try widening the BPM range, increasing semitone tolerance, or enabling circle of fifths.
       </div>
     );
   }
 
-  const cols = ["Track", "Artist", "Key", "Match", "BPM", "Δ", "Pop", "Energy", "Dance", "Valence"];
+  const cols = ["Track", "Artist", "Key", "Match", "Pitch", "BPM", "Δ", "Pop", "Energy", "Dance", "Valence"];
 
   return (
     <div style={{ overflowX: "auto", borderRadius: 12, border: "1px solid #1e1b4b" }}>
@@ -57,6 +61,14 @@ export default function ResultsTable({ results, onSelectSong }) {
                     <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: rs.dot, marginRight: 5, verticalAlign: "middle" }} />
                     {r.reason}
                   </span>
+                </td>
+                <td style={{ padding: "0.55rem 0.85rem", whiteSpace: "nowrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <MiniBar value={r.pitchMeterValue ?? 0} color="#60a5fa" />
+                    <span style={{ color: "#94a3b8", fontSize: "0.75rem", minWidth: 38, textAlign: "right" }}>
+                      {r.pitchShiftText ?? "0"} semis
+                    </span>
+                  </div>
                 </td>
                 <td style={{ padding: "0.55rem 0.85rem", color: "#a78bfa" }}>
                   {r.tempo.toFixed(0)}

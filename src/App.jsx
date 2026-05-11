@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { parseCSV, keyMatchReason, bpmMatch, getRelativeKey, KEY_NAMES, MODE_NAMES } from "./utils.js";
+import { parseCSV, bpmMatch, getRelativeKey, KEY_NAMES, MODE_NAMES, getKeyCompatibilityMatch } from "./utils.js";
 import UploadZone from "./UploadZone.jsx";
 import ResultsTable from "./ResultsTable.jsx";
 
@@ -11,6 +11,8 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [bpmRange, setBpmRange] = useState(10);
   const [includeParallel, setIncludeParallel] = useState(false);
+  const [pitchSemitoneRange, setPitchSemitoneRange] = useState(1);
+  const [includeFifths, setIncludeFifths] = useState(true);
   const [sortBy, setSortBy] = useState("tempoDiff");
   const [filterReason, setFilterReason] = useState("all");
   const [mode, setMode] = useState("song"); // "song" | "manual"
@@ -50,12 +52,31 @@ export default function App() {
     return songs
       .filter(s => !effectiveSelected._isManual ? s !== selected : true)
       .map(s => {
-        const reason = keyMatchReason(s.key, s.mode, effectiveSelected.key, effectiveSelected.mode);
-        if (!reason) return null;
-        if (!includeParallel && reason === "Parallel key") return null;
+        const compat = getKeyCompatibilityMatch(
+          s.key,
+          s.mode,
+          effectiveSelected.key,
+          effectiveSelected.mode,
+          pitchSemitoneRange,
+          includeFifths,
+          includeParallel
+        );
+        if (!compat.compatible) return null;
         const bpm = bpmMatch(s.tempo, effectiveSelected.tempo, bpmRange);
         if (!bpm) return null;
-        return { ...s, reason, tempoDiff: bpm.diff, bpmVariant: bpm.label, adjustedTempo: bpm.adjustedTempo };
+        const pitchShift = compat.pitchShift ?? 0;
+        const pitchMeterValue = Math.min(1, Math.abs(pitchShift) / Math.max(1, pitchSemitoneRange));
+        const pitchShiftText = pitchShift === 0 ? "0" : (pitchShift > 0 ? `+${pitchShift}` : `${pitchShift}`);
+        return {
+          ...s,
+          reason: compat.reason,
+          pitchShift,
+          pitchMeterValue,
+          pitchShiftText,
+          tempoDiff: bpm.diff,
+          bpmVariant: bpm.label,
+          adjustedTempo: bpm.adjustedTempo
+        };
       })
       .filter(Boolean)
       .filter(s => filterReason === "all" || s.reason === filterReason)
@@ -65,7 +86,7 @@ export default function App() {
         if (sortBy === "energy") return b.energy - a.energy;
         return 0;
       });
-  }, [songs, effectiveSelected, selected, bpmRange, includeParallel, sortBy, filterReason]);
+  }, [songs, effectiveSelected, selected, bpmRange, includeParallel, pitchSemitoneRange, includeFifths, sortBy, filterReason]);
 
   const songSearch = useMemo(() => {
     if (!songs || !search) return [];
@@ -236,6 +257,22 @@ export default function App() {
               <input type="checkbox" checked={includeParallel} onChange={e => setIncludeParallel(e.target.checked)} style={{ accentColor: "#7c3aed" }} />
               parallel keys
             </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.78rem", color: "#64748b" }}>
+              <input type="checkbox" checked={includeFifths} onChange={e => setIncludeFifths(e.target.checked)} style={{ accentColor: "#7c3aed" }} />
+              circle of fifths
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ fontSize: "0.68rem", color: "#6b21a8", letterSpacing: "0.1em", textTransform: "uppercase" }}>±Semis</span>
+              <input
+                type="range"
+                min={0}
+                max={6}
+                value={pitchSemitoneRange}
+                onChange={e => setPitchSemitoneRange(Number(e.target.value))}
+                style={{ width: 90 }}
+              />
+              <span style={{ color: "#a78bfa", fontSize: "0.85rem", minWidth: 20 }}>{pitchSemitoneRange}</span>
+            </div>
             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
               <span style={{ fontSize: "0.68rem", color: "#6b21a8", letterSpacing: "0.1em", textTransform: "uppercase", marginRight: 2 }}>Sort</span>
               {btn("Δ BPM", sortBy === "tempoDiff", () => setSortBy("tempoDiff"))}
@@ -259,6 +296,8 @@ export default function App() {
                   ["matches", filtered.length, "#c4b5fd"],
                   ["same key", filtered.filter(r => r.reason === "Same key").length, "#a78bfa"],
                   ["relative", filtered.filter(r => r.reason === "Relative key").length, "#34d399"],
+                  ["fifths", filtered.filter(r => String(r.reason).startsWith("Perfect fifth")).length, "#f59e0b"],
+                  ["pitch shifts", filtered.filter(r => r.reason === "Pitch tolerance" || r.reason === "Relative pitch tolerance").length, "#22c55e"],
                   ...(includeParallel ? [["parallel", filtered.filter(r => r.reason === "Parallel key").length, "#60a5fa"]] : []),
                 ].map(([l, v, c]) => (
                   <div key={l} style={{ background: "#0d0b1e", border: "1px solid #1e1b4b", borderRadius: 8, padding: "0.5rem 1rem", minWidth: 80 }}>

@@ -6,6 +6,84 @@ export function getRelativeKey(key, mode) {
   return { key: (key + 9) % 12, mode: 0 };
 }
 
+function shiftKey(key, mode, semitones) {
+  return { key: (key + semitones + 1200) % 12, mode };
+}
+
+function clampInt(value, min, max) {
+  const n = typeof value === "number" ? value : parseInt(value, 10);
+  if (Number.isNaN(n)) return min;
+  return Math.max(min, Math.min(max, n));
+}
+
+/**
+ * DJ-friendly key compatibility with optional circle-of-fifths neighbors and a semitone tolerance.
+ *
+ * Rules (ported from backend logic):
+ * - Same key (same mode)
+ * - Relative major/minor (opposite mode, same tonic pitch classes)
+ * - Same mode: source key shifted by d semitones, for d in [-pitchSemitoneRange, pitchSemitoneRange]
+ * - Relative mode: relative key shifted by d semitones (same idea, but relative mode)
+ * - Optional: perfect fifth neighbors (source ± 7 semitones) when includeFifths=true
+ *
+ * Parallel keys (same tonic, opposite mode) are handled separately via includeParallel.
+ */
+export function getKeyCompatibilityMatch(
+  songKey,
+  songMode,
+  refKey,
+  refMode,
+  pitchSemitoneRange = 1,
+  includeFifths = true,
+  includeParallel = false
+) {
+  const r = clampInt(pitchSemitoneRange, 0, 11);
+  const rel = getRelativeKey(refKey, refMode);
+
+  // 1) Exact match
+  if (songKey === refKey && songMode === refMode) {
+    return { compatible: true, reason: "Same key", pitchShift: 0 };
+  }
+
+  // 2) Exact relative match
+  if (songKey === rel.key && songMode === rel.mode) {
+    return { compatible: true, reason: "Relative key", pitchShift: 0 };
+  }
+
+  // 3) Perfect fifth neighbors (same mode only)
+  if (includeFifths && songMode === refMode) {
+    const fifthUp = shiftKey(refKey, refMode, 7).key;
+    const fifthDown = shiftKey(refKey, refMode, -7).key;
+    if (songKey === fifthUp) return { compatible: true, reason: "Perfect fifth up", pitchShift: 7 };
+    if (songKey === fifthDown) return { compatible: true, reason: "Perfect fifth down", pitchShift: -7 };
+  }
+
+  // 4) Same mode pitch tolerance (ref shifted by d)
+  if (songMode === refMode) {
+    for (let d = -r; d <= r; d++) {
+      if (songKey === shiftKey(refKey, refMode, d).key) {
+        return { compatible: true, reason: "Pitch tolerance", pitchShift: d };
+      }
+    }
+  }
+
+  // 5) Relative mode pitch tolerance (relative shifted by d)
+  if (songMode === rel.mode) {
+    for (let d = -r; d <= r; d++) {
+      if (songKey === shiftKey(rel.key, rel.mode, d).key) {
+        return { compatible: true, reason: "Relative pitch tolerance", pitchShift: d };
+      }
+    }
+  }
+
+  // 6) Parallel keys (same tonic, opposite mode)
+  if (includeParallel && songKey === refKey && songMode !== refMode) {
+    return { compatible: true, reason: "Parallel key", pitchShift: 0 };
+  }
+
+  return { compatible: false, reason: null, pitchShift: null };
+}
+
 export function keyMatchReason(songKey, songMode, refKey, refMode) {
   if (songKey === refKey && songMode === refMode) return "Same key";
   const rel = getRelativeKey(refKey, refMode);
